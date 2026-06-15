@@ -1,0 +1,24 @@
+# 057-face-detect.yaml
+#
+# Deployed to: /usr/local/demo/gtk-application/057-face-detect.yaml
+#
+# This is what makes the "Face Detect" icon appear in the OpenSTLinux
+# demo launcher's application grid. The demo launcher (demo_launcher.py)
+# reads YAML files from /usr/local/demo/gtk-application/ — it does NOT
+# read .desktop files from /usr/share/applications/.
+#
+# IMPORTANT: Script.Start must be a path RELATIVE to /usr/local/demo/.
+# An absolute path (starting with "/") silently breaks execution.
+#
+# Deploy with:
+#   scp 057-face-detect.yaml root@<BOARD_IP>:/usr/local/demo/gtk-application/
+
+Application:
+    Name: Face Detect
+    Description: live webcam
+    Icon: pictures/face_detect.png
+    Board:
+        List: all
+    Type: script
+    Script:
+        Start: application/face_detect/launch.sh
