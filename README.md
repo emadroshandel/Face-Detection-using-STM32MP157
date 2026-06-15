@@ -39,9 +39,9 @@ I documented the **entire process from zero**, including every problem that came
 |---|---|
 | `face_detect_server.py` | Python HTTP server: camera capture, OpenCV detection, MJPEG stream, BMP frames, JSON status |
 | `face_detect_dashboard.cpp` | C++ SDL2 dashboard: live video on LCD, face indicator, stats, event log, close button |
-| `face_detect_launch.sh` | Shell launcher: starts the server + dashboard together, handles clean shutdown |
-| `057-face-detect.yaml` | Demo launcher YAML — makes the app icon appear in the board's app grid |
-| `launch.sh` (wrapper) | Thin wrapper at `/usr/local/demo/application/face_detect/launch.sh` |
+| `face_detect_launch.sh` | Main launcher (deployed to `/home/weston/`): starts the server + dashboard together, handles clean shutdown, writes `/tmp/face_launch.log` |
+| `057-face-detect.yaml` | Demo launcher YAML (deployed to `/usr/local/demo/gtk-application/`) — makes the app icon appear in the board's app grid |
+| `face_detect_demo_launcher.sh` | Thin wrapper (deployed to `/usr/local/demo/application/face_detect/launch.sh`) — finds the Wayland socket at runtime, then hands off to `face_detect_launch.sh` |
 
 ---
 
@@ -406,56 +406,32 @@ Run all compilation steps on your **Ubuntu build machine**, not on the board.
 
 ### Step 5 — Create the Demo Launcher Integration
 
-These commands run **on the board via SSH**.
+Step 1 runs on the board via SSH. Steps 2–3 are run from your **Ubuntu build machine** (`scp` + a couple of follow-up SSH commands), using the `face_detect_demo_launcher.sh` and `057-face-detect.yaml` files included in this repo.
 
-1. Copy an icon for the app:
+1. Copy an icon for the app (on the board via SSH):
 
    ```sh
-   cp /usr/share/pixmaps/camera_preview.png /usr/local/demo/pictures/face_detect.png
+   ssh root@192.168.1.111 "cp /usr/share/pixmaps/camera_preview.png /usr/local/demo/pictures/face_detect.png"
    ```
 
-2. Create the wrapper script:
+2. Deploy the wrapper script:
 
    ```sh
-   mkdir -p /usr/local/demo/application/face_detect/
-   cat > /usr/local/demo/application/face_detect/launch.sh << 'EOF'
-   #!/bin/sh
-   WESTON_UID=$(id -u weston 2>/dev/null || echo 1000)
-   for try_dir in "$XDG_RUNTIME_DIR" \
-                  "/run/user/$WESTON_UID" "/run/user/0" "/run" "/tmp"; do
-       [ -z "$try_dir" ] && continue
-       if [ -S "$try_dir/wayland-0" ] || [ -S "$try_dir/wayland-1" ]; then
-           export XDG_RUNTIME_DIR="$try_dir"; break
-       fi
-   done
-   [ -S "$XDG_RUNTIME_DIR/wayland-1" ] \
-       && export WAYLAND_DISPLAY=wayland-1 \
-       || export WAYLAND_DISPLAY=wayland-0
-   exec /home/weston/face_detect_launch.sh
-   EOF
-   chmod +x /usr/local/demo/application/face_detect/launch.sh
+   ssh root@192.168.1.111 "mkdir -p /usr/local/demo/application/face_detect/"
+   scp face_detect_demo_launcher.sh root@192.168.1.111:/usr/local/demo/application/face_detect/launch.sh
+   ssh root@192.168.1.111 "chmod +x /usr/local/demo/application/face_detect/launch.sh"
    ```
 
-3. Create the YAML for the demo launcher:
+3. Deploy the YAML for the demo launcher:
 
    ```sh
-   cat > /usr/local/demo/gtk-application/057-face-detect.yaml << 'EOF'
-   Application:
-       Name: Face Detect
-       Description: live webcam
-       Icon: pictures/face_detect.png
-       Board:
-           List: all
-       Type: script
-       Script:
-           Start: application/face_detect/launch.sh
-   EOF
+   scp 057-face-detect.yaml root@192.168.1.111:/usr/local/demo/gtk-application/
    ```
 
 4. Reboot the board — the icon appears automatically after boot:
 
    ```sh
-   reboot
+   ssh root@192.168.1.111 reboot
    ```
 
 ---
