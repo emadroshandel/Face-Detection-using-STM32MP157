@@ -519,3 +519,6 @@ cat /tmp/face_detect_server.log  # Python server output (GStreamer, OpenCV)
 
 ---
 
+## Author
+ 
+Emad Roshandel
