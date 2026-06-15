@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Face Detection
+GenericName=Face Detection
+Comment=Live face detection dashboard with webcam
+Exec=/home/root/face_detect_launch.sh
+Icon=camera_preview
+Terminal=false
+Categories=GTK;
